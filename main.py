@@ -18,6 +18,7 @@ import random
 
 import os
 
+
 TOKEN = os.getenv('BOTAPIKEY')
 MONGO_URI = os.getenv('MONGOURI')
 
@@ -27,6 +28,7 @@ db = client[DB]
 
 user_collection = db[USER_COLLECTION]
 deleted_user_collection = db[DELETED_USER_COLLECTION]
+advert_collection = db[ADVERT_COLLECTION]
 
 df = pd.read_csv(ANNOTATIONS_PATH)
 shown_images = {}
@@ -63,9 +65,6 @@ def main_page_info(user_id):
         [KeyboardButton(Buttons.ASTROLOGY.value), KeyboardButton(Buttons.OWN_BOT.value)],
         [KeyboardButton(Buttons.OFFICE.value), KeyboardButton(Buttons.ABOUT.value)],
     ]
-
-    if user_id == ADMIN_ID:
-        buttons[0][1] = KeyboardButton(Buttons.ADMIN.value)
 
     keyboard = ReplyKeyboardMarkup(
         buttons,
@@ -105,6 +104,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logo_path = "horoscopes/horoscope.jpeg"
 
     context.job_queue.run_daily(send_periodic_horoscope, datetime.time(hour=8, tzinfo=pytz.timezone('Europe/Kiev')), chat_id=chat_id)
+    context.job_queue.run_repeating(check_for_advert, interval=3600, chat_id=chat_id)
 
     # context.job_queue.run_repeating(send_periodic_horoscope, interval=30, chat_id=chat_id)
 
@@ -388,7 +388,26 @@ async def send_periodic_horoscope(context: ContextTypes.DEFAULT_TYPE):
         if horoscope_image:
             await context.bot.send_photo(chat_id, photo=open(horoscope_image, 'rb'), caption=f'Гороскоп на сегодня \u2191')
         else:
-            context.bot.send_message(chat_id, "Гороскопов больше нет!")
+            await context.bot.send_message(chat_id, "Гороскопов больше нет!")
+    except telegram.error.Forbidden as e:
+        print("Blocked by the user!")
+
+        await context.job_queue.stop()
+
+
+async def check_for_advert(context: ContextTypes.DEFAULT_TYPE):
+    chat_id = context.job.chat_id
+    current_time = datetime.datetime.utcnow()
+
+    time_difference = current_time - datetime.timedelta(hours=1.5)
+
+    recent_advert = advert_collection.find_one({'creation_time': {'$gte': time_difference}})
+
+    try:
+        if recent_advert:
+            advert_text = recent_advert.get('text')
+            await context.bot.send_message(chat_id, advert_text)
+
     except telegram.error.Forbidden as e:
         print("Blocked by the user!")
 
@@ -773,24 +792,6 @@ def main():
                 MessageHandler(filters.Regex('|'.join(EASTERN_ZODIAC_SIGNS)), east_horoscope),
                 CommandHandler('start', start)
             ],
-            States.ADMIN_PANEL.value: [
-                MessageHandler(filters.Text(Buttons.MAIN_PAGE_BACK.value), main_page),
-                MessageHandler(filters.Text(Buttons.ADVERT.value), set_advert_text),
-                MessageHandler(filters.Text(Buttons.PRESENT_USERS.value), get_users),
-                MessageHandler(filters.Text(Buttons.LEFT_USERS.value), get_left_users),
-                MessageHandler(filters.Text(Buttons.BACK.value), admin_panel),
-                CommandHandler('start', start)
-            ], 
-            # States.ADVERT_TEXT.value: [
-            #     MessageHandler(filters.Text(~Buttons.BACK.value), set_advert_image),
-            #     MessageHandler(filters.Text(Buttons.BACK.value), admin_panel),
-            #     CommandHandler('start', start)
-            # ],
-            # States.ADVERT_IMAGE.value: [
-            #     MessageHandler(filters.Text(~Buttons.BACK.value), send_advert),
-            #     MessageHandler(filters.Text(Buttons.BACK.value), set_advert_text),
-            #     CommandHandler('start', start)
-            # ]
         },
         fallbacks=[],
     )

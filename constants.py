@@ -52,12 +52,6 @@ class Buttons(Enum):
     HOROSCOPE_FOR_MONTH = 'На месяц'
     HOROSCOPE_FOR_YEAR = 'На год'
 
-    # Admin
-    ADMIN = 'Админка'
-    PRESENT_USERS = 'Пользователи'
-    LEFT_USERS = 'Отписки'
-    ADVERT = 'Объявление'
-
 
 class States(Enum):
     ZODIAC_SIGN = 1
@@ -79,10 +73,6 @@ class States(Enum):
 
     EAST_HOROSCOPE = 14
     CHANGE_EAST_ZODIAC_SIGN_ASTROLOGY = 15
-
-    ADMIN_PANEL = 16
-    ADVERT_TEXT = 17
-    ADVERT_IMAGE = 18
 
 
 EASTERN_ZODIAC_SIGNS = {'Крыса', 'Бык', 'Тигр', 'Кролик', 'Дракон', 'Змея', 'Лошадь', 'Коза', 'Обезьяна', 'Петух', 'Собака', 'Свинья'}
