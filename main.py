@@ -103,9 +103,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     chat_id = update.message.chat_id
     user_id = update.message.from_user.id
     logo_path = "horoscopes/horoscope.jpeg"
-    # context.job_queue.run_daily(send_periodic_horoscope, datetime.time(hour=8, tzinfo=pytz.timezone('Europe/Kiev')),  chat_id=chat_id)
 
-    context.job_queue.run_repeating(send_periodic_horoscope, interval=30, chat_id=chat_id)
+    context.job_queue.run_daily(send_periodic_horoscope, datetime.time(hour=8, tzinfo=pytz.timezone('Europe/Kiev')), chat_id=chat_id)
+
+    # context.job_queue.run_repeating(send_periodic_horoscope, interval=30, chat_id=chat_id)
 
     deleted_user = deleted_user_collection.find_one({"user_id": user_id})
 
