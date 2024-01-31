@@ -726,7 +726,6 @@ def main():
                 MessageHandler(filters.Text(Buttons.OWN_BOT.value), about),
                 MessageHandler(filters.Text(Buttons.OFFICE.value), office),
                 MessageHandler(filters.Text(Buttons.ASTROLOGY.value), astrology),
-                MessageHandler(filters.Text(Buttons.ADMIN.value) & filters.User(user_id=ADMIN_ID), admin_panel),
                 CommandHandler('start', start)
             ],
             States.OFFICE.value: [
